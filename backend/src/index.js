@@ -5,6 +5,7 @@ dotenv.config();
 import authRoutes from "./routes/auth.route.js"
 import employeeRoutes from "./routes/employee.route.js"
 import teamRoutes from "./routes/team.route.js"
+import logRoutes from "./routes/log.route.js"
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/logs", logRoutes);
 
 app.get("/", (_, res) => res.send("Message from backend"));
 
