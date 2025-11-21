@@ -2,6 +2,7 @@ import db from "../models/index.js"
 
 const Employee = db.Employee;
 const Log = db.Log;
+const Team = db.Team;
 
 // GET all employess
 export const listEmployees = async (req, res) => {
@@ -76,5 +77,17 @@ export const deleteEmployee = async (req, res) => {
     } catch (error) {
         console.error(err);
         res.status(500).json({ error: "Failed to delete employee" });
+    }
+}
+
+export const getEmployeeWithTeams = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const employee = await Employee.findOne({where: {id, organisationId: req.user.orgId}, include: {model: Team, through: {attributes: []}}})
+        if (!employee) return res.status(404).json({error: "Employee not found"});
+        res.json(employee);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "Failed to fetch employee details"});
     }
 }
