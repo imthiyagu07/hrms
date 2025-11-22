@@ -4,6 +4,8 @@ const Employee = db.Employee;
 const Log = db.Log;
 const Team = db.Team;
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // GET all employess
 export const listEmployees = async (req, res) => {
     try {
@@ -19,6 +21,19 @@ export const listEmployees = async (req, res) => {
 export const createEmployee = async (req, res) => {
     try {
         const {firstName, lastName, email, phone} = req.body;
+        if (!firstName?.trim() || !lastName?.trim() || !email?.trim()) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+        if (phone && !/^[0-9]{10}$/.test(phone)) {
+            return res.status(400).json({ error: "Phone must be 10 digits" });
+        }
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: "Invalid email format" });
+        }
+        const existing = await Employee.findOne({where:{email, organisationId: req.user.orgId}});
+        if (existing) {
+            return res.status(400).json({ error: "Employee with this email already exists" });
+        }
         const newEmployee = await Employee.create({
             firstName,
             lastName,
@@ -40,12 +55,20 @@ export const createEmployee = async (req, res) => {
 }
 
 // UPDATE Employee
-
 export const updateEmployee = async (req, res) => {
     try {
         const id = req.params.id;
         const employee = await Employee.findOne({where: {id, organisationId: req.user.orgId}});
         if (!employee) return res.status(404).json({error: "Employee not found"});
+        if (req.body.email && !emailRegex.test(req.body.email)) {
+            return res.status(400).json({ error: "Invalid email format" });
+        }
+        if (req.body.email && req.body.email !== employee.email) {
+            const exists = await Employee.findOne({where:{email: req.body.email,organisationId: req.user.orgId}});
+            if (exists) {
+                return res.status(400).json({ error: "Email already in use" });
+            }
+        }
         await employee.update(req.body);
         await Log.create({
             organisationId: req.user.orgId,
@@ -55,7 +78,7 @@ export const updateEmployee = async (req, res) => {
         });
         res.json(employee);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Failed to update employee" });
     }
 }
@@ -75,7 +98,7 @@ export const deleteEmployee = async (req, res) => {
         })
         res.json({message: "Employee deleted"});
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Failed to delete employee" });
     }
 }

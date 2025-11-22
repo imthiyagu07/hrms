@@ -9,7 +9,7 @@ export const listLogs = async (req, res) => {
         include: {model: User, attributes: ["id", "name", "email"]}});
         res.json(logs);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Failed to fetch logs" });
     }
 }

@@ -20,6 +20,16 @@ export const listTeams = async (req, res) => {
 export const createTeam = async (req, res) => {
     try {
         const {name, description} = req.body;
+        if (!name?.trim()) {
+            return res.status(400).json({ error: "Team name is required" });
+        }
+        if (description && description.length > 200) {
+            return res.status(400).json({ error: "Description too long" });
+        }
+        const existing = await Team.findOne({where: {name,organisationId: req.user.orgId}});
+        if (existing) {
+            return res.status(400).json({ error: "Team with this name already exists" });
+        }
         const team = await Team.create({
             name, 
             description, 
@@ -33,7 +43,7 @@ export const createTeam = async (req, res) => {
         })
         res.status(201).json(team);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Failed to create team" });
     }
 }
@@ -44,6 +54,12 @@ export const updateTeam = async (req, res) => {
         const id = req.params.id;
         const team = await Team.findOne({where: {id, organisationId: req.user.orgId}});
         if (!team) return res.status(404).json({error: "Team not found"})
+        if (req.body.name && req.body.name !== team.name) {
+            const exists = await Team.findOne({where: {name: req.body.name,organisationId: req.user.orgId}});
+            if (exists) {
+                return res.status(400).json({ error: "Team name already in use" });
+            }
+        }
         await team.update(req.body);
         await Log.create({
             organisationId: req.user.orgId,
@@ -53,7 +69,7 @@ export const updateTeam = async (req, res) => {
         })
         res.json(team);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Failed to update team" });
     }
 }
@@ -73,7 +89,7 @@ export const deleteTeam = async (req, res) => {
         })
         res.json({message: "Team deleted"});
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Failed to delete team" });
     }
 }
@@ -86,10 +102,11 @@ export const assignEmployee = async (req, res) => {
         if (!team) return res.status(404).json({error: "Team not found"});
         const employee = await Employee.findOne({where: {id: employeeId, organisationId: req.user.orgId}})
         if (!employee) return res.status(404).json({error: "Employee not found"});
-        await EmployeeTeam.create({
-            employeeId,
-            teamId
-        })
+        const alreadyAssigned = await EmployeeTeam.findOne({where: {teamId, employeeId}});
+        if (alreadyAssigned) {
+            return res.status(400).json({ error: "Employee already assigned to this team" });
+        }
+        await EmployeeTeam.create({employeeId,teamId})
         await Log.create({
             organisationId: req.user.orgId,
             userId: req.user.userId,

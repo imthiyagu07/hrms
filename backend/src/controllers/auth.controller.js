@@ -4,11 +4,12 @@ import db from "../models/index.js";
 
 const Organisation = db.Organisation;
 const User = db.User;
+const Log = db.Log;
 
 export const register = async (req, res) => {
     const {orgName, name, email, password} = req.body;
     try {
-        if (!orgName.trim() || !name.trim() || !email.trim() || !password.trim()) {
+        if (!orgName?.trim() || !name?.trim() || !email?.trim() || !password?.trim()) {
             return res.status(400).json({error: "All fields are required"});
         }
         if (password.length < 6) {
@@ -41,6 +42,12 @@ export const register = async (req, res) => {
             sameSite: "strict",
             secure: process.env.NODE_ENV === "development" ? false : true,
         });
+        await Log.create({
+            organisationId: organisation.id,
+            userId: user.id,
+            action: `${new Date().toISOString()} User '${user.id}' created organisation ${organisation.id}`,
+            meta: { userId: user.id, organisationId: organisation.id }
+        });
         res.status(201).json({message: "Organisation registered successfully"});
     } catch (error) {
         console.error(error);
@@ -51,7 +58,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     const {email, password} = req.body;
     try {
-        if (!email || !password) {
+        if (!email?.trim() || !password?.trim()) {
             return res.status(400).json({error: "Email and password are required" });
         }
         const user = await User.findOne({where: {email}});
@@ -64,9 +71,31 @@ export const login = async (req, res) => {
             sameSite: "strict",
             secure: process.env.NODE_ENV === "development" ? false : true,
         });
+        await Log.create({
+            organisationId: user.organisationId,
+            userId: user.id,
+            action: `${new Date().toISOString()} User '${user.id}' logged in`,
+            meta: { userId: user.id, email: user.email }
+        });
         res.json({message: "Login successful"});
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Login failed"});
     }
 }
+
+export const logout = async (req, res) => {
+  try {
+    await Log.create({
+      organisationId: req.user.orgId,
+      userId: req.user.userId,
+      action: `${new Date().toISOString()} User '${req.user.userId}' logged out`,
+      meta: {}
+    });
+    res.clearCookie("jwt");
+    return res.json({ message: "Logged out" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Logout failed" });
+  }
+};
