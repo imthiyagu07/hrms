@@ -21,8 +21,8 @@ const useAuthStore = create((set) => ({
     login: async (data) => {
         set({isLogin: true, error: null});
         try {
-            await api.post("/auth/login", data);
-            set({user: data.email});
+            const res = await api.post("/auth/login", data);
+            set({user: res.data.name});
         } catch (error) {
             set({error: error.response?.data?.error || "Login failed"});
         } finally {
@@ -32,8 +32,8 @@ const useAuthStore = create((set) => ({
     register: async (data) => {
         set({isRegsiter: true, error: null})
         try {
-            await api.post("/auth/register", data);
-            set({user: data.email})
+            const res = await api.post("/auth/register", data);
+            set({user: res.data.name})
         } catch (error) {
             set({error: error.response?.data?.error || "Registration failed"});
         } finally {

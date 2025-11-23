@@ -36,7 +36,7 @@ export const register = async (req, res) => {
             email,
             passwordHash: hashedPassword
         });
-        const token = jwt.sign({userId: user.id, orgId: organisation.id}, process.env.JWT_SECRET, {expiresIn: "8h"});
+        const token = jwt.sign({userId: user.id, orgId: organisation.id, name: user.name}, process.env.JWT_SECRET, {expiresIn: "8h"});
         res.cookie("jwt", token, {
             httpOnly: true,
             sameSite: "strict",
@@ -48,7 +48,7 @@ export const register = async (req, res) => {
             action: `${new Date().toISOString()} User '${user.id}' created organisation ${organisation.id}`,
             meta: { userId: user.id, organisationId: organisation.id }
         });
-        res.status(201).json({message: "Organisation registered successfully"});
+        res.status(201).json({message: "Organisation registered successfully", name: user.name});
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Registration Failed"});
@@ -65,7 +65,7 @@ export const login = async (req, res) => {
         if(!user) return res.status(400).json({error: "Invalid credentials"});
         const passwordMatch = await bcrypt.compare(password, user.passwordHash);
         if (!passwordMatch) return res.status(400).json({error: "Invalid credentials"});
-        const token = jwt.sign({userId: user.id, orgId: user.organisationId}, process.env.JWT_SECRET, {expiresIn: '8h'});
+        const token = jwt.sign({userId: user.id, orgId: user.organisationId, name: user.name}, process.env.JWT_SECRET, {expiresIn: '8h'});
         res.cookie("jwt", token, {
             httpOnly: true,
             sameSite: "strict",
@@ -77,7 +77,7 @@ export const login = async (req, res) => {
             action: `${new Date().toISOString()} User '${user.id}' logged in`,
             meta: { userId: user.id, email: user.email }
         });
-        res.json({message: "Login successful"});
+        res.json({message: "Login successful", name: user.name});
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Login failed"});
@@ -99,3 +99,5 @@ export const logout = async (req, res) => {
     return res.status(500).json({ error: "Logout failed" });
   }
 };
+
+
