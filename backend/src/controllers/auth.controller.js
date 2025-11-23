@@ -39,7 +39,7 @@ export const register = async (req, res) => {
         const token = jwt.sign({userId: user.id, orgId: organisation.id, name: user.name}, process.env.JWT_SECRET, {expiresIn: "8h"});
         res.cookie("jwt", token, {
             httpOnly: true,
-            sameSite: "strict",
+            sameSite: "none",
             secure: process.env.NODE_ENV === "development" ? false : true,
         });
         await Log.create({
@@ -68,7 +68,7 @@ export const login = async (req, res) => {
         const token = jwt.sign({userId: user.id, orgId: user.organisationId, name: user.name}, process.env.JWT_SECRET, {expiresIn: '8h'});
         res.cookie("jwt", token, {
             httpOnly: true,
-            sameSite: "strict",
+            sameSite: "none",
             secure: process.env.NODE_ENV === "development" ? false : true,
         });
         await Log.create({
