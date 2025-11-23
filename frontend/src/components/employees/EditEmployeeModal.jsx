@@ -13,7 +13,7 @@ const EditEmployeeModal = ({ employee, onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     updateEmployee(employee.id, formData);
     onClose();

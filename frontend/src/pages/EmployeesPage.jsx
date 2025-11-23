@@ -15,7 +15,7 @@ const EmployeesPage = () => {
   if (isLoading) return <PageLoader />
 
   return (
-    <div className="text-white">
+    <main className="text-white">
       {showModal && <EmployeeModel onClose={() => setShowModal(false)} />}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold">Employees</h1>
@@ -30,10 +30,10 @@ const EmployeesPage = () => {
         </div>
       ) : (
         <div className="text-center mt-20">
-          <h1 className="text-neutral-400 text-2xl">No employees found 😕</h1>
+          <h1 className="text-neutral-400 text-2xl">No employees found</h1>
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

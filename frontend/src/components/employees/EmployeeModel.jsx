@@ -8,7 +8,7 @@ const EmployeeModel = ({ onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     createEmployee(formData);
     onClose();
